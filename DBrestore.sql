@@ -1,7 +1,6 @@
 USE [master]
 -- Declare variables
 DECLARE @BackupPath NVARCHAR(500) = 'E:\DBBackup\SQL2\'; -- The path of the folder containing .bak files
---DECLARE @DataPath NVARCHAR(500) = 'C:\Program Files\Microsoft SQL Server\MSSQL12.MSSQL2014\MSSQL\DATA\'; -- The path of the SQL Server data directory
 DECLARE @DataPath NVARCHAR(500) = 'E:\SQL_2019_DB\DATA\'; -- The path of the SQL Server data directory
 DECLARE @BackupFile NVARCHAR(500); -- The name of the backup file
 DECLARE @DatabaseName NVARCHAR(500); -- The name of the database to be restored
@@ -15,7 +14,6 @@ CREATE TABLE #BackupFiles (FileName NVARCHAR(500));
 -- Insert the backup file names into the temporary table using xp_cmdshell command
 INSERT INTO #BackupFiles (FileName)
 EXEC xp_cmdshell 'dir /b E:\DBBackup\SQL2\*.bak';
---EXEC xp_cmdshell 'dir /b E:\test\*.bak';
 
 -- Delete any NULL values from the temporary table
 DELETE FROM #BackupFiles WHERE FileName IS NULL;
@@ -57,16 +55,12 @@ BEGIN
 
 
 	SET @LogicalNameSQL = 'RESTORE FILELISTONLY FROM Disk ='''+@BackupPath+@BackupFile+'''';
-	--INSERT INTO @fileListTable EXEC('RESTORE FILELISTONLY FROM DISK = '''+@BackupPath+@BackupFile+'''');
 	PRINT 'LogicalNameSQL = '+@LogicalNameSQL;
 	INSERT INTO #fileListTable EXEC(@LogicalNameSQL);
-	--SELECT * FROM #fileListTable;
 	DECLARE @logicalData NVARCHAR(255)
 	DECLARE @logicalLog NVARCHAR(255)
 	SELECT @logicalData = LogicalName FROM #fileListTable WHERE Type = 'D' AND FileGroupName = 'PRIMARY';
-	--DELETE FROM @fileListTable WHERE LogicalName = @logicalData;
 	SELECT @logicalLog = LogicalName FROM #fileListTable WHERE Type = 'L';
-	--DELETE FROM @fileListTable WHERE LogicalName = @logicalData;
     -- Build a dynamic SQL statement to restore the database from the backup file with MOVE option
     SET @SQL = 'RESTORE DATABASE ' + QUOTENAME(@dbname) +
                ' FROM DISK = ''' + @BackupPath + @BackupFile + '''' +
